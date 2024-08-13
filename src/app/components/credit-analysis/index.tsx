@@ -46,10 +46,6 @@ const CreditAnalysisComponent = () => {
     }, []);
 
     useEffect(() => {
-        filterTransactions();
-    }, [filter, tags]);
-
-    useEffect(() => {
         console.log("Called useEffect !!");
         if (filteredTags.length > 0) {
             const allTags = filteredTags.map(tag => tag.tag.tag);
@@ -125,6 +121,10 @@ const CreditAnalysisComponent = () => {
         setFilteredTags(filtered);
     };
 
+    useEffect(() => {
+        filterTransactions();
+    }, [filter, tags, filterTransactions]);
+
     return (
         <div className="">
 
@@ -183,18 +183,19 @@ const CreditAnalysisComponent = () => {
                         <th className="py-2">Total Credit</th>
                     </tr>
                 </thead>
-
-                {
-                    filteredTags.map((tag) => {
-                        const credit = calculateTotalCredit(tag.transactions)
-                        return (
-                            <tr>
-                                <td className="py-2 border-t text-center">{tag.tag.tag}</td>
-                                <td className="py-2 border-t text-center">{credit}</td>
-                            </tr>
-                        )
-                    })
-                }
+                <tbody>
+                    {
+                        filteredTags.map((tag) => {
+                            const credit = calculateTotalCredit(tag.transactions)
+                            return (
+                                <tr>
+                                    <td className="py-2 border-t text-center">{tag.tag.tag}</td>
+                                    <td className="py-2 border-t text-center">{credit}</td>
+                                </tr>
+                            )
+                        })
+                    }
+                </tbody>
             </table>
 
             <div className='w-full mt-4 '>

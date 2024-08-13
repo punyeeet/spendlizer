@@ -47,9 +47,7 @@ const DebitAnalysisComponent = () => {
         fetchTransactions();
     }, []);
 
-    useEffect(() => {
-        filterTransactions();
-    }, [filter, tags]);
+
 
     useEffect(() => {
         console.log("Called useEffect !!");
@@ -127,6 +125,10 @@ const DebitAnalysisComponent = () => {
         setFilteredTags(filtered);
     };
 
+    useEffect(() => {
+        filterTransactions();
+    }, [filter, tags, filterTransactions]);
+
 
     return (
         <div className="overflow-x-auto">
@@ -185,18 +187,20 @@ const DebitAnalysisComponent = () => {
                         <th className="py-2">Total Debit</th>
                     </tr>
                 </thead>
+                <tbody>
+                    {
+                        filteredTags.map((tag) => {
+                            const debit = calculateTotalDebit(tag.transactions)
+                            return (
+                                <tr>
+                                    <td className="py-2 border-t text-center">{tag.tag.tag}</td>
+                                    <td className="py-2 border-t text-center">{debit}</td>
+                                </tr>
+                            )
+                        })
+                    }
 
-                {
-                    filteredTags.map((tag) => {
-                        const debit = calculateTotalDebit(tag.transactions)
-                        return (
-                            <tr>
-                                <td className="py-2 border-t text-center">{tag.tag.tag}</td>
-                                <td className="py-2 border-t text-center">{debit}</td>
-                            </tr>
-                        )
-                    })
-                }
+                </tbody>
             </table>
 
             <div className='w-full mt-4 '>
