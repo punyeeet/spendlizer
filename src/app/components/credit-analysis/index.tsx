@@ -23,26 +23,20 @@ ChartJS.register(
 const CreditAnalysisComponent = () => {
 
     const [tags, setTags] = useState<TagTransaction[]>([]);
-
+    const [filteredTags, setFilteredTags] = useState<TagTransaction[]>([]);
     const [chartData, setChartData] = useState<ChartData>({
         datasets: [],
         labels: []
     });
+    const [filter, setFilter] = useState('all');
 
     useEffect(() => {
         const fetchTransactions = async () => {
             try {
                 const response = await axios.get('/api/transaction/tag/all'); // Adjust the endpoint as necessary
-
-
                 const fetchedData = response.data.data;
-
                 setTags(fetchedData);
-
-
-
-
-
+                setFilteredTags(fetchedData);
             } catch (error) {
                 console.error('Error fetching transactions:', error);
             }
@@ -52,32 +46,136 @@ const CreditAnalysisComponent = () => {
     }, []);
 
     useEffect(() => {
-        if (tags.length > 0) {
+        filterTransactions();
+    }, [filter, tags]);
 
-            const allTags = tags.map((tag: any) => tag.tag.tag);
-
-            const data = tags.map((tag: any) => calculateTotalCredit(tag.transactions))
-
-            const colorData = tags.map((tag: any) => tag.tag.color);
+    useEffect(() => {
+        console.log("Called useEffect !!");
+        if (filteredTags.length > 0) {
+            const allTags = filteredTags.map(tag => tag.tag.tag);
+            const data = filteredTags.map(tag => calculateTotalCredit(tag.transactions));
+            const colorData = filteredTags.map(tag => tag.tag.color);
 
             setChartData({
                 labels: allTags,
                 datasets: [
                     {
                         label: "Credit",
-                        barThickness:20,
+                        barThickness: 20,
                         data: data,
                         fill: true,
                         borderColor: "rgb(255, 99, 132)",
                         backgroundColor: colorData
                     }
                 ]
-            })
+            });
         }
-    }, [tags])
+    }, [filteredTags]);
+
+    const filterTransactions = () => {
+        const now = new Date();
+        let filtered = tags;
+
+        switch (filter) {
+            case 'day':
+                filtered = tags.map(tag => ({
+                    ...tag,
+                    transactions: tag.transactions.filter(transaction => {
+                        const transactionDate = new Date(transaction.date);
+                        return transactionDate.toDateString() === now.toDateString();
+                    })
+                }));
+                break;
+            case 'week':
+                const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+                filtered = tags.map(tag => ({
+                    ...tag,
+                    transactions: tag.transactions.filter(transaction => {
+                        const transactionDate = new Date(transaction.date);
+                        return transactionDate >= startOfWeek;
+                    })
+                }));
+                break;
+            case 'month':
+                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                filtered = tags.map(tag => ({
+                    ...tag,
+                    transactions: tag.transactions.filter(transaction => {
+                        const transactionDate = new Date(transaction.date);
+                        return transactionDate >= startOfMonth;
+                    })
+                }));
+                break;
+            case 'year':
+                const startOfYear = new Date(now.getFullYear(), 0, 1);
+                filtered = tags.map(tag => ({
+                    ...tag,
+                    transactions: tag.transactions.filter(transaction => {
+                        const transactionDate = new Date(transaction.date);
+                        return transactionDate >= startOfYear;
+                    })
+                }));
+                break;
+            case 'all':
+            default:
+                filtered = tags;
+                break;
+        }
+
+        setFilteredTags(filtered);
+    };
 
     return (
         <div className="">
+
+            <div className="mb-4">
+                <label className="mr-4">
+                    <input
+                        type="radio"
+                        value="all"
+                        checked={filter === 'all'}
+                        onChange={() => setFilter('all')}
+                    />
+                    All
+                </label>
+                <label className="mr-4">
+                    <input
+                        type="radio"
+                        value="day"
+                        checked={filter === 'day'}
+                        onChange={() => setFilter('day')}
+                    />
+                    Day
+                </label>
+                <label className="mr-4">
+                    <input
+                        type="radio"
+                        value="week"
+                        checked={filter === 'week'}
+                        onChange={() => setFilter('week')}
+                    />
+                    Week
+                </label>
+                <label className="mr-4">
+                    <input
+                        type="radio"
+                        value="month"
+                        checked={filter === 'month'}
+                        onChange={() => setFilter('month')}
+                    />
+                    Month
+                </label>
+                <label className="mr-4">
+                    <input
+                        type="radio"
+                        value="year"
+                        checked={filter === 'year'}
+                        onChange={() => setFilter('year')}
+                    />
+                    Year
+                </label>
+            </div>
+
             <table className="min-w-full bg-white">
                 <thead>
                     <tr>
@@ -87,7 +185,7 @@ const CreditAnalysisComponent = () => {
                 </thead>
 
                 {
-                    tags.map((tag) => {
+                    filteredTags.map((tag) => {
                         const credit = calculateTotalCredit(tag.transactions)
                         return (
                             <tr>
