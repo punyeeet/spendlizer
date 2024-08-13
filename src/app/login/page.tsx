@@ -110,7 +110,7 @@ const LoginPage: React.FC = () => {
                         Login
                     </button>
                 </form>
-                <Link href={'/signup'} className='align-middle hover:text-blue-500'> Don't have an Account? Signup instead!</Link>
+                <Link href={'/signup'} className='align-middle hover:text-blue-500'> Do not have an Account? Signup instead!</Link>
 
                 {
                     loading ?
