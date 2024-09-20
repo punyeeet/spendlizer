@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation';
 import { Player } from '@lottiefiles/react-lottie-player';
 import loadingAnimation from '@/assets/animation-loading.json'
 import { User } from '@/archetypes/Auth';
+import Image from "next/image";
+
 
 
 const SignupPage: React.FC = () => {
@@ -21,7 +23,7 @@ const SignupPage: React.FC = () => {
   useEffect(() => {
     if (user.email.length > 0 && user.password!.length > 0 && user.username!.length > 0) {
       setSubmitDisabled(false)
-    }else{
+    } else {
       setSubmitDisabled(true);
     }
   }, [user]);
@@ -58,6 +60,16 @@ const SignupPage: React.FC = () => {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded shadow-md">
+        <div className="flex justify-center">
+          <Image
+            className="dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert rounded-lg"
+            src="/logo.jpeg"
+            alt="Spendlizer Logo"
+            width={180}
+            height={37}
+            priority
+          />
+        </div>
         <h2 className="text-2xl font-bold text-center">Sign Up</h2>
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
@@ -104,22 +116,22 @@ const SignupPage: React.FC = () => {
           </div>
           <button
             type="submit"
-            className={`w-full px-4 py-2 text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${submitDisabled ? 'cursor-not-allowed' : ''}`}
+            className={`w-full px-4 py-2 text-white  bg-gray-500 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${submitDisabled ? 'cursor-not-allowed' : ''}`}
             disabled={submitDisabled}
           >
             Sign Up
           </button>
         </form>
-        <Link href={'/login'} className='align-middle hover:text-blue-500'> Already have an Account? Login instead!</Link>
+        <Link href={'/login'} className='align-middle hover:text-gray-700'> Already have an Account? Login instead!</Link>
 
         {
-          loading ? 
+          loading ?
 
-          <Player src={loadingAnimation}
-            loop
-            autoplay
-            className='w-20 h-20'
-          />: null
+            <Player src={loadingAnimation}
+              loop
+              autoplay
+              className='w-20 h-20 text-black'
+            /> : null
         }
       </div>
     </div>

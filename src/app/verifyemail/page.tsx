@@ -67,7 +67,7 @@ export default function VerifyEmailPage() {
                         src={loadingAnimation}
                         loop
                         autoplay
-                        className="h-20 w-20"
+                        className="h-20 w-20 text-black"
                     />
                 }
             </span>

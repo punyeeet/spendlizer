@@ -9,6 +9,7 @@ export interface Transaction {
     type: TRANSACTION_TYPE,
     tag: string[],
     description: string,
+    _id?: string
 }
 
 export interface Tag {

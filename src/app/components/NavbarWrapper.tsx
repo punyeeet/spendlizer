@@ -1,5 +1,5 @@
 import React from 'react';
-import { Navbar } from './Menu'; "@/components/Menu";
+import Navbar from './Navbar';
 import '../styles/font.css'
 
 const Layout = ({ children }:any) => {
@@ -7,6 +7,7 @@ const Layout = ({ children }:any) => {
         <div className='roboto-regular'>
             <Navbar/>
             <main>{children}</main>
+            
         </div>
     );
 };

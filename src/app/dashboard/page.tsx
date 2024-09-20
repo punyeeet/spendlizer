@@ -1,27 +1,33 @@
 "use client"
-import React, { useState, useEffect, use, ChangeEvent, FormEvent } from 'react';
+import React, { useState, useEffect, } from 'react';
 import axios from 'axios';
-import Modal from '@/app/components/Modal';
 import { formatDate } from '@/helpers/generic';
-import { Player } from '@lottiefiles/react-lottie-player';
-import loadingAnimation from '@/assets/animation-loading.json'
 import Layout from '../components/NavbarWrapper';
-import { Dropdown, MenuProps } from 'antd';
-import MultiSelectDropdown from '../components/multiselect';
 import { DebitModal } from '../components/add-transaction/DebitModal';
 import CreditModal from '../components/add-transaction/CreditModal';
 import { AddTag } from '../components/add-tag';
 import { Tag, Transaction } from '@/archetypes/Transaction';
 import { TagUI } from '../components/tag';
 import { BsCreditCard2FrontFill } from "react-icons/bs";
+import { useRouter } from 'next/navigation';
+import ConfirmModal from '../components/confirm-modal';
+import { MdDeleteOutline } from "react-icons/md";
+import { FaEdit } from "react-icons/fa";
+import EditModal from '../components/edit-transaction/EditModal';
+
 
 
 
 const Dashboard = () => {
+    const router = useRouter();
+
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
     const [showDebitModal, setShowDebitModal] = useState(false);
     const [showCreditModal, setShowCreditModal] = useState(false);
+    const [showConfirmModal, setShowConfirmModal] = useState('');
+    const [showEditModal, setShowEditModal] = useState('');
+
     const [tags, setTags] = useState<Tag[]>([]);
     const [filter, setFilter] = useState('all');
 
@@ -29,18 +35,19 @@ const Dashboard = () => {
 
     const [addTagModal, setAddTagModal] = useState(false);
 
-    useEffect(() => {
-        const fetchTransactions = async () => {
-            try {
-                const response = await axios.get('/api/transaction/all'); // Adjust the endpoint as necessary
-                const fetchedData = response.data.data;
-                setTransactions(fetchedData);
-                setFilteredTransactions(fetchedData);
-            } catch (error) {
-                console.error('Error fetching transactions:', error);
-            }
-        };
 
+    const fetchTransactions = async () => {
+        try {
+            const response = await axios.get('/api/transaction/all'); // Adjust the endpoint as necessary
+            const fetchedData = response.data.data;
+            setTransactions(fetchedData);
+            setFilteredTransactions(fetchedData);
+        } catch (error) {
+            console.error('Error fetching transactions:', error);
+        }
+    };
+
+    useEffect(() => {
         fetchTransactions();
     }, [submittingLoader]);
 
@@ -114,7 +121,7 @@ const Dashboard = () => {
                         <h1 className="text-2xl font-semibold text-gray-700">Dashboard</h1>
                         <div className=''>
                             <button
-                                className="bg-blue-700 text-white py-2 px-4 rounded mr-2 hover:bg-blue-800"
+                                className="bg-gray-700 text-white py-2 px-4 rounded mr-2 hover:bg-gray-600"
                                 onClick={() => {
                                     setShowDebitModal(true)
                                 }}
@@ -122,7 +129,7 @@ const Dashboard = () => {
                                 Debit <span>&#43;</span>
                             </button>
                             <button
-                                className="bg-pink-400 text-white py-2 px-4 mr-2 rounded hover:bg-pink-500"
+                                className="bg-gray-700 text-white py-2 px-4 mr-2 rounded hover:bg-gray-600"
                                 onClick={() => {
                                     setShowCreditModal(true)
                                 }}
@@ -130,7 +137,7 @@ const Dashboard = () => {
                                 Credit <span>&#43;</span>
                             </button>
                             <button
-                                className="bg-rose-300 text-white py-2 px-4 rounded hover:bg-rose-400"
+                                className="bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-400"
                                 onClick={() => {
                                     setAddTagModal(true)
                                 }}
@@ -202,13 +209,15 @@ const Dashboard = () => {
                             </thead>
                             <tbody>
                                 {filteredTransactions.map((transaction, index) => (
+                                    
                                     <tr key={index}>
                                         <td className="py-2 border-t text-center">{formatDate(transaction.date)}</td>
                                         <td className="py-2 border-t text-center">
                                             {
+                                                
                                                 transaction.tag.map((tag) => {
                                                     const result = tags.find((ob) => ob._id == tag);
-
+                                                    
                                                     return (
                                                         result && <TagUI tag={result} key={result._id} />
                                                     )
@@ -218,7 +227,21 @@ const Dashboard = () => {
                                         <td className="py-2 border-t text-center">{transaction.amount}</td>
                                         <td className="py-2 border-t text-center">{transaction.description}</td>
                                         <td className={`py-2 border-t text-center rounded-md text-white font-semibold ${transaction.type == 'debit' ? 'bg-red-500' : 'bg-green-500'}`}>{transaction.type}</td>
-                                        <td className="py-2 border-t text-center"> <a href='#'>Edit</a> <a href='#'>Delete</a></td>
+                                        <td className="py-2 border-t text-center justify-evenly ">
+                                            
+                                            <button onClick={()=>setShowEditModal(transaction._id!)}
+                                            className='hover:text-gray-600'
+                                                >
+                                                <FaEdit size={20}/>
+                                            </button>
+
+                                            <button onClick={()=>setShowConfirmModal(transaction._id!)}
+                                            className='hover:text-gray-600'
+                                                >
+                                                <MdDeleteOutline size={20}/>
+                                            </button>
+                                            
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -252,6 +275,32 @@ const Dashboard = () => {
                         setSubmittingLoader={setSubmittingLoader}
                     />
                 )}
+
+                {/* Edit transaction Modal */}
+                {
+                    showEditModal !='' && (
+                        <EditModal
+                            setShowEditModal={setShowEditModal}
+                            id={showEditModal}
+                            setSubmittingLoader={setSubmittingLoader}
+                            submittingLoader={submittingLoader}
+                        />
+                    )
+                }
+
+                {/* Confirm delete Modal */}
+                {
+                    showConfirmModal !='' && (
+                        <ConfirmModal
+                            setShowConfirmModal={setShowConfirmModal}
+                            id={showConfirmModal}
+                            setSubmittingLoader={setSubmittingLoader}
+                            confirmMessage={'Are you sure you want to delete?'}
+                            submittingLoader={submittingLoader}
+                        />
+                    )
+                }
+
             </div>
         </Layout>
     );

@@ -1,16 +1,15 @@
 
-import React, { ChangeEvent, FormEvent, memo, useEffect, useState } from 'react'
+import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react'
 import Modal from '../Modal'
 import { Player } from '@lottiefiles/react-lottie-player'
 import loadingAnimation from '@/assets/animation-loading.json'
-import MultiSelectDropdown from '../multiselect'
 import axios from 'axios'
 import { TRANSACTION_TYPE, Transaction } from '@/archetypes/Transaction'
+import MultiSelectDropdown from '../multiselect'
+import { formatDate } from '../../util/Generic.util'
 
 
-
-
-const DebitModalComponent = ({ setShowDebitModal, submittingLoader, setSubmittingLoader }: any) => {
+const EditModal = ({ setShowEditModal, submittingLoader, setSubmittingLoader, id }: any) => {
 
     const [tags, setTags] = useState([]);
 
@@ -19,7 +18,7 @@ const DebitModalComponent = ({ setShowDebitModal, submittingLoader, setSubmittin
     const [addTransaction, setAddTransaction] = useState<Transaction>({
         date: new Date(0),
         amount: 0,
-        type: TRANSACTION_TYPE.DEBIT,
+        type: TRANSACTION_TYPE.CREDIT,
         tag: [],
         description: '',
     })
@@ -29,19 +28,19 @@ const DebitModalComponent = ({ setShowDebitModal, submittingLoader, setSubmittin
         try {
             setSubmittingLoader(true);
 
-            const response = await axios.post("api/transaction/add", {
+            const response = await axios.put(`api/transaction/update/${id}`, {
                 data: {
                     ...addTransaction
                 }
             });
 
-            console.log('Added successfully', response);
+            console.log('Updated successfully', response);
 
         } catch (error: any) {
             console.log("failed", error.message)
         } finally {
             setSubmittingLoader(false);
-            setShowDebitModal(false);
+            setShowEditModal('');
         }
     }
 
@@ -61,6 +60,7 @@ const DebitModalComponent = ({ setShowDebitModal, submittingLoader, setSubmittin
     }
 
 
+
     useEffect(() => {
         const fetchTags = async () => {
             try {
@@ -77,10 +77,28 @@ const DebitModalComponent = ({ setShowDebitModal, submittingLoader, setSubmittin
         fetchTags();
     }, []);
 
+    useEffect(() => {
+        const fetchTransaction = async () => {
+            try {
+                const response = await axios.get(`/api/transaction/${id}`); // Adjust the endpoint as necessary
+
+                const fetchedData = response.data.transaction;
+
+                setAddTransaction(fetchedData);
+                // console.log([...fetchedData.tag]);
+                setSelectedTags([...fetchedData.tag])
+            } catch (error) {
+                console.error('Error fetching transaction:', error);
+            }
+        };
+
+        fetchTransaction();
+    }, [])
+
 
     return (
-        <Modal onClose={() => setShowDebitModal(false)}>
-            <h2 className="text-xl font-semibold mb-4">Add Debit Detail</h2>
+        <Modal onClose={() => setShowEditModal('')}>
+            <h2 className="text-xl font-semibold mb-4">Edit Transaction</h2>
             <form onSubmit={submitTransaction}>
                 <div className="mb-4">
                     <label className="block text-gray-700">Date</label>
@@ -89,6 +107,8 @@ const DebitModalComponent = ({ setShowDebitModal, submittingLoader, setSubmittin
                         className="mt-1 block w-full p-2 border rounded-md"
                         onChange={handleChange}
                         name='date'
+                        // @ts-ignore
+                        value={formatDate(addTransaction.date)}
                     />
                 </div>
 
@@ -99,6 +119,7 @@ const DebitModalComponent = ({ setShowDebitModal, submittingLoader, setSubmittin
                         className="mt-1 block w-full p-2 border rounded-md"
                         onChange={handleChange}
                         name='amount'
+                        value={addTransaction.amount}
                     />
                 </div>
                 <div className="mb-4">
@@ -108,6 +129,7 @@ const DebitModalComponent = ({ setShowDebitModal, submittingLoader, setSubmittin
                         className="mt-1 block w-full p-2 border rounded-md"
                         onChange={handleChange}
                         name='description'
+                        value={addTransaction.description}
                     />
                 </div>
 
@@ -122,8 +144,9 @@ const DebitModalComponent = ({ setShowDebitModal, submittingLoader, setSubmittin
                     />
                 </div>
 
+
                 <button className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-700" type='submit'>
-                    Submit
+                    Update
                 </button>
             </form>
             {
@@ -136,8 +159,7 @@ const DebitModalComponent = ({ setShowDebitModal, submittingLoader, setSubmittin
                     /> : null
             }
         </Modal>
-
     )
 }
 
-export const DebitModal = memo(DebitModalComponent)
+export default EditModal

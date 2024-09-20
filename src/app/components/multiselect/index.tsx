@@ -6,7 +6,7 @@ import { IoIosArrowDropdown } from "react-icons/io";
 
 const MultiSelectDropdown = ({ options, onChange, getKey, getLabel, placeholder, value }: any) => {
 
-  const [selectedOptions, setSelectedOptions] = useState<any>(value ? value : []);
+  const [selectedOptions, setSelectedOptions] = useState<any>(value ? [...value] : []);
   const [labels, setLabels] = useState<any>([]);
 
   const [showOptions, setShowOptions] = useState(false);
@@ -22,7 +22,7 @@ const MultiSelectDropdown = ({ options, onChange, getKey, getLabel, placeholder,
   useEffect(() => {
     // Add event listener
     document.addEventListener('mousedown', handleClickOutside);
-
+    console.log(value)
     // Cleanup event listener
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);

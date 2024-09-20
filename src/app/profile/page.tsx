@@ -50,8 +50,7 @@ export default function ProfilePage({ params }: any) {
                         <div className="uppercase tracking-wide text-sm text-indigo-500 font-semibold">User Profile</div>
                         <h1 className="block mt-1 text-lg leading-tight font-medium text-black">{data.username}</h1>
                         <p className="mt-2 text-gray-500">Email: {data.email}</p>
-                        <p className="mt-2 text-gray-500">Joined: January 1, 2020</p>
-                        <p className="mt-2 text-gray-500">Bio: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                        <p className="mt-2 text-gray-500">Welcome to Spendlizer. Your personal money tracking and analysis tool.</p>
                         <button className="mt-4 bg-red-500 text-white py-2 px-4 rounded hover:bg-red-700" onClick={handleLogout}>Logout</button>
                     </div>
                 </div>
