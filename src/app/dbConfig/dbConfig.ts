@@ -1,24 +1,23 @@
 import mongoose from 'mongoose';
 
+let isConnected = false;
+
 export async function connect() {
+    if (isConnected || mongoose.connections[0]?.readyState) {
+        isConnected = true;
+        return;
+    }
+
+    if (!process.env.MONGO_URL) {
+        console.error('MONGO_URL environment variable is not defined');
+        return;
+    }
+
     try {
-        console.log('URL',process.env.MONGO_URL)
-        mongoose.connect(process.env.MONGO_URL!);
-
-        const connection = mongoose.connection;
-
-        connection.on('connected', () => {
-            console.log('MogoDB connected successfully');
-        })
-
-        connection.on('error', (err) => {
-
-            console.log('MogogDB connection error. Please make sure MongoDB is running. ' + err);
-
-            process.exit();
-        })
-
+        const db = await mongoose.connect(process.env.MONGO_URL);
+        isConnected = !!db.connections[0].readyState;
+        console.log('MongoDB connected successfully');
     } catch (error) {
-        console.log('Cannot connect to DB !', error)
+        console.error('Cannot connect to DB !', error);
     }
 }

@@ -1,6 +1,5 @@
 import jwt from "jsonwebtoken";
 import { NextRequest } from "next/server";
-import { decode } from "punycode";
 
 export async function getDataFromToken(request: NextRequest) {
     try {
