@@ -2,29 +2,43 @@ import { connect } from "@/app/dbConfig/dbConfig";
 import { getDataFromToken } from "@/helpers/getDataFromToken";
 import { NextRequest, NextResponse } from "next/server";
 import Transaction from "@/models/transactionModel";
+import { buildDateQuery } from "@/helpers/generic";
 
-
-connect()
+connect();
 
 export async function GET(request: NextRequest) {
-
     try {
-
         const userId = await getDataFromToken(request);
 
-        const allTransactions = await Transaction.find({ userId }).select("-userId").select("-__v");
+        const { searchParams } = new URL(request.url);
+        const startDate = searchParams.get("startDate");
+        const endDate = searchParams.get("endDate");
 
-        return NextResponse.json({
-            message: "Transactions fetched successfully",
-            success: true,
-            data: allTransactions
-        },{ status: 200})
+        const query: Record<string, any> = { userId };
+        const dateFilter = buildDateQuery(startDate, endDate);
+        if (dateFilter) {
+            query.date = dateFilter;
+        }
 
+        const allTransactions = await Transaction.find(query)
+            .sort({ date: -1 })
+            .select("-userId")
+            .select("-__v");
+
+        return NextResponse.json(
+            {
+                message: "Transactions fetched successfully",
+                success: true,
+                data: allTransactions,
+            },
+            { status: 200 }
+        );
     } catch (error: any) {
-        return NextResponse.json({
-            error: error.message
-        }, { status: 500 })
+        return NextResponse.json(
+            {
+                error: error.message,
+            },
+            { status: 500 }
+        );
     }
-
-
 }

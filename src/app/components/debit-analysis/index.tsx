@@ -1,224 +1,252 @@
-
+import React, { memo, useEffect, useState, useMemo, useCallback } from 'react';
+import axios from 'axios';
 import { calculateTotalDebit } from '@/app/util/Analysis.util';
 import { Tag, Transaction } from '@/archetypes/Transaction';
-import axios from 'axios';
-import React, { memo, useEffect, useMemo, useState } from 'react'
-import { Chart as ChartJS, CategoryScale, LinearScale, Title, Tooltip, Legend, ChartData, BarElement } from "chart.js"
-import { Bar } from "react-chartjs-2"
-
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  Title,
+  Tooltip,
+  Legend,
+  ChartData,
+  BarElement,
+} from 'chart.js';
+import { Bar } from 'react-chartjs-2';
+import { FiTrendingDown, FiLayers } from 'react-icons/fi';
+import { BsArrowUpRight } from 'react-icons/bs';
+import DateRangeFilter, { DateRange } from '../common/DateRangeFilter';
 
 interface TagTransaction {
-    tag: Tag,
-    transactions: Transaction[];
+  tag: Tag;
+  transactions: Transaction[];
 }
 
 ChartJS.register(
-    CategoryScale,
-    LinearScale,
-    BarElement,
-    Title,
-    Tooltip,
-    Legend,
-)
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 const DebitAnalysisComponent = () => {
+  const [tags, setTags] = useState<TagTransaction[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dateRange, setDateRange] = useState<DateRange>({
+    startDate: null,
+    endDate: null,
+  });
 
-    const [tags, setTags] = useState<TagTransaction[]>([]);
-    const [filteredTags, setFilteredTags] = useState<TagTransaction[]>([]);
-    const [chartData, setChartData] = useState<ChartData>({
-        datasets: [],
-        labels: []
-    });
-    const [filter, setFilter] = useState('all');
+  const fetchTransactions = useCallback(async () => {
+    try {
+      setLoading(true);
+      const params: Record<string, string> = {};
+      if (dateRange.startDate) params.startDate = dateRange.startDate;
+      if (dateRange.endDate) params.endDate = dateRange.endDate;
 
+      const response = await axios.get('/api/transaction/tag/all', { params });
+      const fetchedData = response.data.data || [];
+      setTags(fetchedData);
+    } catch (error) {
+      console.error('Error fetching debit analysis transactions:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [dateRange]);
 
-    useEffect(() => {
-        const fetchTransactions = async () => {
-            try {
-                const response = await axios.get('/api/transaction/tag/all'); // Adjust the endpoint as necessary
-                const fetchedData = response.data.data;
-                setTags(fetchedData);
-                setFilteredTags(fetchedData);
-            } catch (error) {
-                console.error('Error fetching transactions:', error);
-            }
+  useEffect(() => {
+    fetchTransactions();
+  }, [fetchTransactions]);
+
+  const tagDebitList = useMemo(() => {
+    return tags
+      .map((item) => {
+        const total = calculateTotalDebit(item.transactions);
+        return {
+          id: item.tag._id,
+          name: item.tag.tag,
+          color: item.tag.color || '#f43f5e',
+          total,
+          count: item.transactions.filter((t) => t.type === 'debit').length,
         };
+      })
+      .sort((a, b) => b.total - a.total);
+  }, [tags]);
 
-        fetchTransactions();
-    }, []);
+  const totalDebitSum = useMemo(() => {
+    return tagDebitList.reduce((acc, curr) => acc + curr.total, 0);
+  }, [tagDebitList]);
 
+  const topCategory = tagDebitList[0]?.total > 0 ? tagDebitList[0] : null;
 
-
-    useEffect(() => {
-        console.log("Called useEffect !!");
-        if (filteredTags.length > 0) {
-            const allTags = filteredTags.map(tag => tag.tag.tag);
-            const data = filteredTags.map(tag => calculateTotalDebit(tag.transactions));
-            const colorData = filteredTags.map(tag => tag.tag.color);
-
-            setChartData({
-                labels: allTags,
-                datasets: [
-                    {
-                        label: "Debit",
-                        barThickness: 20,
-                        data: data,
-                        fill: true,
-                        borderColor: "rgb(255, 99, 132)",
-                        backgroundColor: colorData
-                    }
-                ]
-            });
-        }
-    }, [filteredTags]);
-
-    const filterTransactions = () => {
-        const now = new Date();
-        let filtered = tags;
-
-        switch (filter) {
-            case 'day':
-                filtered = tags.map(tag => ({
-                    ...tag,
-                    transactions: tag.transactions.filter(transaction => {
-                        const transactionDate = new Date(transaction.date);
-                        return transactionDate.toDateString() === now.toDateString();
-                    })
-                }));
-                break;
-            case 'week':
-                const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
-                filtered = tags.map(tag => ({
-                    ...tag,
-                    transactions: tag.transactions.filter(transaction => {
-                        const transactionDate = new Date(transaction.date);
-                        return transactionDate >= startOfWeek;
-                    })
-                }));
-                break;
-            case 'month':
-                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-                filtered = tags.map(tag => ({
-                    ...tag,
-                    transactions: tag.transactions.filter(transaction => {
-                        const transactionDate = new Date(transaction.date);
-                        return transactionDate >= startOfMonth;
-                    })
-                }));
-                break;
-            case 'year':
-                const startOfYear = new Date(now.getFullYear(), 0, 1);
-                filtered = tags.map(tag => ({
-                    ...tag,
-                    transactions: tag.transactions.filter(transaction => {
-                        const transactionDate = new Date(transaction.date);
-                        return transactionDate >= startOfYear;
-                    })
-                }));
-                break;
-            case 'all':
-            default:
-                filtered = tags;
-                break;
-        }
-
-        setFilteredTags(filtered);
+  const chartData: ChartData<'bar'> = useMemo(() => {
+    const activeItems = tagDebitList.filter((item) => item.total > 0);
+    return {
+      labels: activeItems.map((item) => item.name),
+      datasets: [
+        {
+          label: 'Debit (₹)',
+          data: activeItems.map((item) => item.total),
+          backgroundColor: activeItems.map((item) => item.color),
+          borderRadius: 6,
+          borderSkipped: false,
+          maxBarThickness: 32,
+        },
+      ],
     };
+  }, [tagDebitList]);
 
-    useEffect(() => {
-        filterTransactions();
-    }, [filter, tags, filterTransactions]);
+  return (
+    <div className="space-y-6">
+      {/* Date Range Filter */}
+      <DateRangeFilter onDateChange={(range) => setDateRange(range)} />
 
-
-    return (
-        <div className="overflow-x-auto">
-            <div className="mb-4">
-                <label className="mr-4">
-                    <input
-                        type="radio"
-                        value="all"
-                        checked={filter === 'all'}
-                        onChange={() => setFilter('all')}
-                    />
-                    All
-                </label>
-                <label className="mr-4">
-                    <input
-                        type="radio"
-                        value="day"
-                        checked={filter === 'day'}
-                        onChange={() => setFilter('day')}
-                    />
-                    Day
-                </label>
-                <label className="mr-4">
-                    <input
-                        type="radio"
-                        value="week"
-                        checked={filter === 'week'}
-                        onChange={() => setFilter('week')}
-                    />
-                    Week
-                </label>
-                <label className="mr-4">
-                    <input
-                        type="radio"
-                        value="month"
-                        checked={filter === 'month'}
-                        onChange={() => setFilter('month')}
-                    />
-                    Month
-                </label>
-                <label className="mr-4">
-                    <input
-                        type="radio"
-                        value="year"
-                        checked={filter === 'year'}
-                        onChange={() => setFilter('year')}
-                    />
-                    Year
-                </label>
+      {loading ? (
+        <div className="py-16 text-center text-slate-400 font-medium">
+          Loading debit insights...
+        </div>
+      ) : (
+        <>
+          {/* KPI Insight Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="p-4 rounded-2xl bg-rose-50/50 border border-rose-100 flex items-center gap-3">
+              <div className="p-3 rounded-xl bg-rose-100 text-rose-700">
+                <BsArrowUpRight className="text-xl" />
+              </div>
+              <div>
+                <div className="text-xs font-medium text-rose-700/80">Total Expense (Debit)</div>
+                <div className="text-xl font-bold text-rose-800">
+                  ₹{totalDebitSum.toLocaleString()}
+                </div>
+              </div>
             </div>
 
-            <table className="min-w-full bg-white shadow-md">
-                <thead>
-                    <tr>
-                        <th className="py-2">Tag</th>
-                        <th className="py-2">Total Debit</th>
+            <div className="p-4 rounded-2xl bg-amber-50/50 border border-amber-100 flex items-center gap-3">
+              <div className="p-3 rounded-xl bg-amber-100 text-amber-700">
+                <FiTrendingDown className="text-xl" />
+              </div>
+              <div>
+                <div className="text-xs font-medium text-amber-700/80">Top Expense Tag</div>
+                <div className="text-xl font-bold text-amber-900 truncate max-w-[150px]">
+                  {topCategory ? topCategory.name : '—'}
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center gap-3">
+              <div className="p-3 rounded-xl bg-slate-200/80 text-slate-700">
+                <FiLayers className="text-xl" />
+              </div>
+              <div>
+                <div className="text-xs font-medium text-slate-500">Categories Active</div>
+                <div className="text-xl font-bold text-slate-800">
+                  {tagDebitList.filter((t) => t.total > 0).length} / {tagDebitList.length}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Content Grid: Table + Chart */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
+            {/* Breakdown Table */}
+            <div className="lg:col-span-6 bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4 overflow-hidden">
+              <h3 className="text-sm font-semibold text-slate-800 mb-3 px-1">
+                Expense Breakdown
+              </h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase">
+                      <th className="py-2.5 px-3">Tag</th>
+                      <th className="py-2.5 px-3 text-right">Outflow</th>
+                      <th className="py-2.5 px-3 text-right">% Share</th>
                     </tr>
-                </thead>
-                <tbody>
-                    {
-                        filteredTags.map((tag) => {
-                            const debit = calculateTotalDebit(tag.transactions)
-                            return (
-                                <tr>
-                                    <td className="py-2 border-t text-center">{tag.tag.tag}</td>
-                                    <td className="py-2 border-t text-center">{debit}</td>
-                                </tr>
-                            )
-                        })
-                    }
+                  </thead>
+                  <tbody className="divide-y divide-slate-200/60">
+                    {tagDebitList.length === 0 || totalDebitSum === 0 ? (
+                      <tr>
+                        <td colSpan={3} className="py-8 text-center text-slate-400 text-xs">
+                          No debit transactions found in this period.
+                        </td>
+                      </tr>
+                    ) : (
+                      tagDebitList.map((tag) => {
+                        const percentage =
+                          totalDebitSum > 0 ? ((tag.total / totalDebitSum) * 100).toFixed(1) : '0';
+                        return (
+                          <tr key={tag.id} className="hover:bg-white/60 transition-colors">
+                            <td className="py-2.5 px-3">
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className="w-2.5 h-2.5 rounded-full shrink-0"
+                                  style={{ backgroundColor: tag.color }}
+                                />
+                                <span className="font-medium text-slate-800 truncate max-w-[140px]">
+                                  {tag.name}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="py-2.5 px-3 text-right font-semibold text-rose-600">
+                              ₹{tag.total.toLocaleString()}
+                            </td>
+                            <td className="py-2.5 px-3 text-right text-xs text-slate-500">
+                              {percentage}%
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
 
-                </tbody>
-            </table>
-
-            <div className='w-full mt-4 '>
-                <Bar
-                    //@ts-ignore
+            {/* Visual Chart */}
+            <div className="lg:col-span-6 bg-white border border-slate-200/80 rounded-2xl p-4 flex flex-col justify-between">
+              <h3 className="text-sm font-semibold text-slate-800 mb-2 px-1">
+                Debit Distribution Chart
+              </h3>
+              <div className="h-64 sm:h-72 w-full flex items-center justify-center">
+                {chartData.datasets[0]?.data.length ? (
+                  <Bar
                     data={chartData}
                     options={{
-                        responsive: true,
-                        plugins: {
-                            legend: { position: "top" },
-                            title: { display: true, text: "Debit Analysis" }
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                          callbacks: {
+                            label: (ctx) => ` ₹${Number(ctx.raw || 0).toLocaleString()}`,
+                          },
                         },
-                        indexAxis: 'y'
+                      },
+                      scales: {
+                        x: {
+                          grid: { display: false },
+                          ticks: { font: { size: 11 } },
+                        },
+                        y: {
+                          grid: { color: 'rgba(226, 232, 240, 0.6)' },
+                          ticks: { font: { size: 11 } },
+                        },
+                      },
                     }}
-                />
+                  />
+                ) : (
+                  <div className="text-xs text-slate-400 font-medium">
+                    No debit transactions in this period.
+                  </div>
+                )}
+              </div>
             </div>
-        </div>
-    )
-}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
 
 export const DebitAnalysis = memo(DebitAnalysisComponent);

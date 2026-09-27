@@ -2,35 +2,47 @@ import { connect } from "@/app/dbConfig/dbConfig";
 import { getDataFromToken } from "@/helpers/getDataFromToken";
 import { NextRequest, NextResponse } from "next/server";
 import Transaction from "@/models/transactionModel";
-import Tag from "@/models/tagModel";
+import { buildDateQuery } from "@/helpers/generic";
 
-
-connect()
+connect();
 
 export async function GET(request: NextRequest) {
-
     try {
-
         const userId = await getDataFromToken(request);
 
-        const allTransactions = await Transaction.find({ userId,type:'debit' }).select("-userId").select("-__v");
+        const { searchParams } = new URL(request.url);
+        const startDate = searchParams.get("startDate");
+        const endDate = searchParams.get("endDate");
 
-        // ---> check for mongo err
-        if(!allTransactions){
-            throw new Error("Problem fetching from database.")
+        const query: Record<string, any> = { userId, type: "debit" };
+        const dateFilter = buildDateQuery(startDate, endDate);
+        if (dateFilter) {
+            query.date = dateFilter;
         }
 
-        return NextResponse.json({
-            message: "All Credit Transactions fetched successfully",
-            success: true,
-            data: allTransactions
-        }, { status: 200 })
+        const allTransactions = await Transaction.find(query)
+            .sort({ date: -1 })
+            .select("-userId")
+            .select("-__v");
 
+        if (!allTransactions) {
+            throw new Error("Problem fetching from database.");
+        }
+
+        return NextResponse.json(
+            {
+                message: "All Debit Transactions fetched successfully",
+                success: true,
+                data: allTransactions,
+            },
+            { status: 200 }
+        );
     } catch (error: any) {
-        return NextResponse.json({
-            error: error.message
-        }, { status: 500 })
+        return NextResponse.json(
+            {
+                error: error.message,
+            },
+            { status: 500 }
+        );
     }
-
-
 }

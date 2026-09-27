@@ -1,48 +1,39 @@
-
-import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react'
-import Modal from '../Modal'
-import { Player } from '@lottiefiles/react-lottie-player'
-import loadingAnimation from '@/assets/animation-loading.json'
-import axios from 'axios'
-import { TRANSACTION_TYPE, Transaction } from '@/archetypes/Transaction'
-import MultiSelectDropdown from '../multiselect'
-import { formatDate } from '../../util/Generic.util'
-
+import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react';
+import Modal from '../Modal';
+import axios from 'axios';
+import { TRANSACTION_TYPE, Transaction } from '@/archetypes/Transaction';
+import MultiSelectDropdown from '../multiselect';
+import { formatDate } from '../../util/Generic.util';
+import LottieLoader from '../common/LottieLoader';
 
 const EditModal = ({ setShowEditModal, submittingLoader, setSubmittingLoader, id }: any) => {
-
     const [tags, setTags] = useState([]);
-
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
-
     const [addTransaction, setAddTransaction] = useState<Transaction>({
         date: new Date(0),
         amount: 0,
         type: TRANSACTION_TYPE.CREDIT,
         tag: [],
         description: '',
-    })
+    });
 
     const submitTransaction = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         try {
             setSubmittingLoader(true);
-
             const response = await axios.put(`api/transaction/update/${id}`, {
                 data: {
-                    ...addTransaction
-                }
+                    ...addTransaction,
+                },
             });
-
             console.log('Updated successfully', response);
-
         } catch (error: any) {
-            console.log("failed", error.message)
+            console.log("failed", error.message);
         } finally {
             setSubmittingLoader(false);
             setShowEditModal('');
         }
-    }
+    };
 
     const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -53,21 +44,18 @@ const EditModal = ({ setShowEditModal, submittingLoader, setSubmittingLoader, id
     };
 
     const handleTagChange = (options: string[]) => {
+        setSelectedTags(options);
         setAddTransaction((prev) => ({
             ...prev,
-            tag: options
+            tag: options,
         }));
-    }
-
-
+    };
 
     useEffect(() => {
         const fetchTags = async () => {
             try {
-                const response = await axios.get('/api/tags/all'); // Adjust the endpoint as necessary
-
+                const response = await axios.get('/api/tags/all');
                 const fetchedData = response.data.data;
-
                 setTags(fetchedData);
             } catch (error) {
                 console.error('Error fetching tags:', error);
@@ -80,25 +68,23 @@ const EditModal = ({ setShowEditModal, submittingLoader, setSubmittingLoader, id
     useEffect(() => {
         const fetchTransaction = async () => {
             try {
-                const response = await axios.get(`/api/transaction/${id}`); // Adjust the endpoint as necessary
-
+                const response = await axios.get(`/api/transaction/${id}`);
                 const fetchedData = response.data.transaction;
-
                 setAddTransaction(fetchedData);
-                // console.log([...fetchedData.tag]);
-                setSelectedTags([...fetchedData.tag])
+                setSelectedTags([...(fetchedData.tag || [])]);
             } catch (error) {
                 console.error('Error fetching transaction:', error);
             }
         };
 
-        fetchTransaction();
-    }, [])
-
+        if (id) {
+            fetchTransaction();
+        }
+    }, [id]);
 
     return (
         <Modal onClose={() => setShowEditModal('')}>
-            <h2 className="text-xl font-semibold mb-4">Edit Transaction</h2>
+            <h2 className="text-xl font-semibold mb-4 text-slate-800">Edit Transaction</h2>
             <form onSubmit={submitTransaction}>
                 <div className="mb-4">
                     <label className="block text-gray-700">Date</label>
@@ -106,7 +92,7 @@ const EditModal = ({ setShowEditModal, submittingLoader, setSubmittingLoader, id
                         type="date"
                         className="mt-1 block w-full p-2 border rounded-md"
                         onChange={handleChange}
-                        name='date'
+                        name="date"
                         // @ts-ignore
                         value={formatDate(addTransaction.date)}
                     />
@@ -118,7 +104,7 @@ const EditModal = ({ setShowEditModal, submittingLoader, setSubmittingLoader, id
                         type="number"
                         className="mt-1 block w-full p-2 border rounded-md"
                         onChange={handleChange}
-                        name='amount'
+                        name="amount"
                         value={addTransaction.amount}
                     />
                 </div>
@@ -128,7 +114,7 @@ const EditModal = ({ setShowEditModal, submittingLoader, setSubmittingLoader, id
                         type="text"
                         className="mt-1 block w-full p-2 border rounded-md"
                         onChange={handleChange}
-                        name='description'
+                        name="description"
                         value={addTransaction.description}
                     />
                 </div>
@@ -144,22 +130,13 @@ const EditModal = ({ setShowEditModal, submittingLoader, setSubmittingLoader, id
                     />
                 </div>
 
-
-                <button className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-700" type='submit'>
+                <button className="bg-indigo-600 text-white py-2 px-4 rounded-xl hover:bg-indigo-700 font-medium" type="submit">
                     Update
                 </button>
             </form>
-            {
-                submittingLoader ?
-
-                    <Player src={loadingAnimation}
-                        loop
-                        autoplay
-                        className='w-20 h-20 text-black'
-                    /> : null
-            }
+            {submittingLoader ? <LottieLoader className="w-20 h-20 text-black" /> : null}
         </Modal>
-    )
-}
+    );
+};
 
-export default EditModal
+export default EditModal;

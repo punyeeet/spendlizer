@@ -1,54 +1,49 @@
-'use client'
+'use client';
+import Avatar from "@/app/components/avatar/Avatar";
+import Layout from "@/app/components/NavbarWrapper";
+import { FiGithub, FiLinkedin, FiMail, FiTwitter } from "react-icons/fi";
 
-export default function ProfilePage({ params }:any) {
+export default function ProfilePage({ params }: any) {
+    const username = params?.id || 'User';
+
     return (
-        <div className="min-h-screen bg-gray-100 flex flex-col items-center py-10">
-            <div className="bg-white shadow-md rounded-lg p-6 w-full sm:w-3/4 lg:w-1/2">
-                <div className="flex items-center space-x-4">
-                    <img
-                        className="w-24 h-24 rounded-full object-cover"
-                        src="/path-to-your-photo.jpg"
-                        alt="Profile Photo"
-                    />
-                    <div>
-                        <h2 className="text-2xl font-bold">Your Name</h2>
-                        <h4>{params.id}</h4>
-                        <p className="text-gray-600">your.email@example.com</p>
+        <Layout>
+            <div className="min-h-[calc(100vh-4rem)] bg-slate-50 py-10 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
+                <div className="max-w-2xl w-full bg-white shadow-xl rounded-2xl border border-slate-100 p-8">
+                    <div className="flex items-center space-x-6 pb-6 border-b border-slate-100">
+                        <Avatar name={username} size="xl" />
+                        <div>
+                            <h2 className="text-2xl font-bold text-slate-800">{username}</h2>
+                            <p className="text-sm text-indigo-600 font-medium">Spendlizer Member</p>
+                            <p className="text-sm text-slate-500 mt-1 flex items-center gap-1.5">
+                                <FiMail className="text-slate-400" /> {username}@example.com
+                            </p>
+                        </div>
                     </div>
-                </div>
-                <div className="mt-6">
-                    <h3 className="text-xl font-semibold">About Me</h3>
-                    <p className="text-gray-700 mt-2">
-                        Write a brief description about yourself here. This can include your background,
-                        interests, and any other details you would like to share.
-                    </p>
-                </div>
-                <div className="mt-6">
-                    <h3 className="text-xl font-semibold">Skills</h3>
-                    <ul className="list-disc list-inside text-gray-700 mt-2">
-                        <li>Skill 1</li>
-                        <li>Skill 2</li>
-                        <li>Skill 3</li>
-                    </ul>
-                </div>
-                <div className="mt-6">
-                    <h3 className="text-xl font-semibold">Contact</h3>
-                    <p className="text-gray-700 mt-2">
-                        Feel free to reach out to me via email or connect with me on social media.
-                    </p>
-                    <div className="flex space-x-4 mt-2">
-                        <a href="https://linkedin.com/in/yourprofile" className="text-blue-600 hover:underline">
-                            LinkedIn
-                        </a>
-                        <a href="https://github.com/yourprofile" className="text-gray-800 hover:underline">
-                            GitHub
-                        </a>
-                        <a href="https://twitter.com/yourprofile" className="text-blue-400 hover:underline">
-                            Twitter
-                        </a>
+
+                    <div className="mt-6">
+                        <h3 className="text-base font-semibold text-slate-900">About</h3>
+                        <p className="text-sm text-slate-600 mt-2 leading-relaxed">
+                            Personal money tracking and analytics profile on Spendlizer.
+                        </p>
+                    </div>
+
+                    <div className="mt-6 pt-6 border-t border-slate-100">
+                        <h3 className="text-base font-semibold text-slate-900 mb-3">Connect</h3>
+                        <div className="flex space-x-3">
+                            <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-xs font-medium hover:bg-blue-100 transition-colors">
+                                <FiLinkedin /> LinkedIn
+                            </a>
+                            <a href="https://github.com" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 text-xs font-medium hover:bg-slate-200 transition-colors">
+                                <FiGithub /> GitHub
+                            </a>
+                            <a href="https://twitter.com" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-50 text-sky-600 text-xs font-medium hover:bg-sky-100 transition-colors">
+                                <FiTwitter /> Twitter
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    )
+        </Layout>
+    );
 }

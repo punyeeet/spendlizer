@@ -3,44 +3,58 @@ import { getDataFromToken } from "@/helpers/getDataFromToken";
 import { NextRequest, NextResponse } from "next/server";
 import Transaction from "@/models/transactionModel";
 import Tag from "@/models/tagModel";
+import { buildDateQuery } from "@/helpers/generic";
 
-
-connect()
+connect();
 
 export async function GET(request: NextRequest) {
-
     try {
-
         const userId = await getDataFromToken(request);
 
-        const allTransactions = await Transaction.find({ userId }).select("-userId").select("-__v");
+        const { searchParams } = new URL(request.url);
+        const startDate = searchParams.get("startDate");
+        const endDate = searchParams.get("endDate");
 
-        const allTags = await Tag.find({ userId }).select("-userId").select("-__v");
-
-        // ---> check for mongo err
-        if(!allTransactions || !allTags ){
-            throw new Error("Problem fetching from database.")
+        const query: Record<string, any> = { userId };
+        const dateFilter = buildDateQuery(startDate, endDate);
+        if (dateFilter) {
+            query.date = dateFilter;
         }
 
-        const responseData = allTags.map(tag => ({
+        const allTransactions = await Transaction.find(query)
+            .sort({ date: -1 })
+            .select("-userId")
+            .select("-__v");
+
+        const allTags = await Tag.find({ userId })
+            .select("-userId")
+            .select("-__v");
+
+        if (!allTransactions || !allTags) {
+            throw new Error("Problem fetching from database.");
+        }
+
+        const responseData = allTags.map((tag) => ({
             tag,
-            transactions: allTransactions.filter(transaction =>
+            transactions: allTransactions.filter((transaction) =>
                 transaction.tag.includes(tag._id)
-            )
+            ),
         }));
 
-
-        return NextResponse.json({
-            message: "Transactions as per tags fetched successfully",
-            success: true,
-            data: responseData
-        }, { status: 200 })
-
+        return NextResponse.json(
+            {
+                message: "Transactions as per tags fetched successfully",
+                success: true,
+                data: responseData,
+            },
+            { status: 200 }
+        );
     } catch (error: any) {
-        return NextResponse.json({
-            error: error.message
-        }, { status: 500 })
+        return NextResponse.json(
+            {
+                error: error.message,
+            },
+            { status: 500 }
+        );
     }
-
-
 }

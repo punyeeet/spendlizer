@@ -1,47 +1,38 @@
-
-import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react'
-import Modal from '../Modal'
-import { Player } from '@lottiefiles/react-lottie-player'
-import loadingAnimation from '@/assets/animation-loading.json'
-import axios from 'axios'
-import { TRANSACTION_TYPE, Transaction } from '@/archetypes/Transaction'
-import MultiSelectDropdown from '../multiselect'
-
+import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react';
+import Modal from '../Modal';
+import axios from 'axios';
+import { TRANSACTION_TYPE, Transaction } from '@/archetypes/Transaction';
+import MultiSelectDropdown from '../multiselect';
+import LottieLoader from '../common/LottieLoader';
 
 const CreditModal = ({ setShowCreditModal, submittingLoader, setSubmittingLoader }: any) => {
-
     const [tags, setTags] = useState([]);
-
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
-
     const [addTransaction, setAddTransaction] = useState<Transaction>({
         date: new Date(0),
         amount: 0,
         type: TRANSACTION_TYPE.CREDIT,
         tag: [],
         description: '',
-    })
+    });
 
     const submitTransaction = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         try {
             setSubmittingLoader(true);
-
             const response = await axios.post("api/transaction/add", {
                 data: {
-                    ...addTransaction
-                }
+                    ...addTransaction,
+                },
             });
-
             console.log('Added successfully', response);
-
         } catch (error: any) {
-            console.log("failed", error.message)
+            console.log("failed", error.message);
         } finally {
             setSubmittingLoader(false);
             setShowCreditModal(false);
         }
-    }
+    };
 
     const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -52,19 +43,18 @@ const CreditModal = ({ setShowCreditModal, submittingLoader, setSubmittingLoader
     };
 
     const handleTagChange = (options: string[]) => {
+        setSelectedTags(options);
         setAddTransaction((prev) => ({
             ...prev,
-            tag: options
+            tag: options,
         }));
-    }
+    };
 
     useEffect(() => {
         const fetchTags = async () => {
             try {
-                const response = await axios.get('/api/tags/all'); // Adjust the endpoint as necessary
-
+                const response = await axios.get('/api/tags/all');
                 const fetchedData = response.data.data;
-
                 setTags(fetchedData);
             } catch (error) {
                 console.error('Error fetching tags:', error);
@@ -76,7 +66,7 @@ const CreditModal = ({ setShowCreditModal, submittingLoader, setSubmittingLoader
 
     return (
         <Modal onClose={() => setShowCreditModal(false)}>
-            <h2 className="text-xl font-semibold mb-4">Add Credit Detail</h2>
+            <h2 className="text-xl font-semibold mb-4 text-emerald-800">Add Credit Detail</h2>
             <form onSubmit={submitTransaction}>
                 <div className="mb-4">
                     <label className="block text-gray-700">Date</label>
@@ -84,7 +74,7 @@ const CreditModal = ({ setShowCreditModal, submittingLoader, setSubmittingLoader
                         type="date"
                         className="mt-1 block w-full p-2 border rounded-md"
                         onChange={handleChange}
-                        name='date'
+                        name="date"
                     />
                 </div>
 
@@ -94,7 +84,7 @@ const CreditModal = ({ setShowCreditModal, submittingLoader, setSubmittingLoader
                         type="number"
                         className="mt-1 block w-full p-2 border rounded-md"
                         onChange={handleChange}
-                        name='amount'
+                        name="amount"
                     />
                 </div>
                 <div className="mb-4">
@@ -103,7 +93,7 @@ const CreditModal = ({ setShowCreditModal, submittingLoader, setSubmittingLoader
                         type="text"
                         className="mt-1 block w-full p-2 border rounded-md"
                         onChange={handleChange}
-                        name='description'
+                        name="description"
                     />
                 </div>
 
@@ -118,22 +108,13 @@ const CreditModal = ({ setShowCreditModal, submittingLoader, setSubmittingLoader
                     />
                 </div>
 
-                
-                <button className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-700" type='submit'>
+                <button className="bg-emerald-600 text-white py-2 px-4 rounded-xl hover:bg-emerald-700 font-medium" type="submit">
                     Submit
                 </button>
             </form>
-            {
-                submittingLoader ?
-
-                    <Player src={loadingAnimation}
-                        loop
-                        autoplay
-                        className='w-20 h-20'
-                    /> : null
-            }
+            {submittingLoader ? <LottieLoader className="w-20 h-20" /> : null}
         </Modal>
-    )
-}
+    );
+};
 
-export default CreditModal
+export default CreditModal;

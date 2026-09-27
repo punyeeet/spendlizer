@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    serverExternalPackages: ["mongoose", "bcryptjs"],
+    experimental: {
+        serverComponentsExternalPackages: ["mongoose", "bcryptjs"],
+    },
     eslint: {
         ignoreDuringBuilds: true,
     }
