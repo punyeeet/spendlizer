@@ -19,6 +19,33 @@ interface UserState {
   clearUser: () => void;
 }
 
+const customStorage = {
+  getItem: (name: string): string | null => {
+    if (typeof window === 'undefined') return null;
+    try {
+      return localStorage.getItem(name);
+    } catch {
+      return null;
+    }
+  },
+  setItem: (name: string, value: string): void => {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.setItem(name, value);
+    } catch {
+      // ignore
+    }
+  },
+  removeItem: (name: string): void => {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.removeItem(name);
+    } catch {
+      // ignore
+    }
+  },
+};
+
 export const useUserStore = create<UserState>()(
   persist(
     (set, get) => ({
@@ -53,7 +80,7 @@ export const useUserStore = create<UserState>()(
     }),
     {
       name: 'spendlizer-user-storage',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => customStorage),
       partialize: (state) => ({ user: state.user }),
     }
   )
