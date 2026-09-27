@@ -2,7 +2,7 @@
 const nextConfig = {
     transpilePackages: ["zustand"],
     experimental: {
-        serverComponentsExternalPackages: ["mongoose", "bcryptjs"],
+        serverComponentsExternalPackages: ["mongoose"],
     },
     eslint: {
         ignoreDuringBuilds: true,

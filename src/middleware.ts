@@ -35,6 +35,7 @@ export const config = {
         '/signup',
         '/verifyemail',
         '/dashboard',
-        '/analysis'
+        '/analysis',
+        '/recurring'
     ],
 }

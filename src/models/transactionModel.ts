@@ -25,9 +25,18 @@ const transactionSchema = new mongoose.Schema({
     type: {
         type: String,
         required: [true, "Please provide transaction type"]
+    },
+    recurringScheduleId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "recurringpayment",
+        default: null
+    },
+    isRecurring: {
+        type: Boolean,
+        default: false
     }
-})
+}, { timestamps: true });
 
-const Transaction = mongoose.models.transaction || mongoose.model("transaction", transactionSchema)
+const Transaction = mongoose.models.transaction || mongoose.model("transaction", transactionSchema);
 
 export default Transaction;

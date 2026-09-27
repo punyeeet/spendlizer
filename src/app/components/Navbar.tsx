@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import Avatar from './avatar/Avatar';
-import { FiHome, FiPieChart, FiUser } from 'react-icons/fi';
+import { FiHome, FiPieChart, FiRepeat, FiUser } from 'react-icons/fi';
 import { useUserStore } from '@/store';
 
 const Navbar = () => {
@@ -20,6 +20,7 @@ const Navbar = () => {
 
   const navItems = [
     { name: 'Dashboard', href: '/dashboard', icon: FiHome },
+    { name: 'Recurring', href: '/recurring', icon: FiRepeat },
     { name: 'Analysis', href: '/analysis', icon: FiPieChart },
     { name: 'Profile', href: '/profile', icon: FiUser },
   ];

@@ -3,11 +3,22 @@ import Modal from '../Modal';
 import axios from 'axios';
 import LottieLoader from '../common/LottieLoader';
 
-const ConfirmModal = ({ setShowConfirmModal, submittingLoader, setSubmittingLoader, confirmMessage, id }: any) => {
-    const handleDeleteTransaction = async (transactionId: string) => {
+const ConfirmModal = ({
+    setShowConfirmModal,
+    submittingLoader,
+    setSubmittingLoader,
+    confirmMessage,
+    id,
+    onDelete,
+}: any) => {
+    const handleDeleteTransaction = async (itemId: string) => {
+        if (onDelete) {
+            await onDelete(itemId);
+            return;
+        }
         setSubmittingLoader(true);
         try {
-            await axios.delete(`/api/transaction/delete/${transactionId}`);
+            await axios.delete(`/api/transaction/delete/${itemId}`);
             setSubmittingLoader(false);
             setShowConfirmModal('');
         } catch (err) {
