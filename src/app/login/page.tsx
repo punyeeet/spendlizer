@@ -5,6 +5,7 @@ import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import LottieLoader from '../components/common/LottieLoader';
 import Image from "next/image";
+import { useUserStore } from '@/store';
 
 interface User {
     email: string;
@@ -16,6 +17,7 @@ const LoginPage: React.FC = () => {
     const [user, setUser] = useState<User>({ email: '', password: '' });
     const [submitDisabled, setSubmitDisabled] = useState<boolean>(true);
     const [loading, setLoading] = useState<boolean>(false);
+    const fetchUser = useUserStore((state) => state.fetchUser);
 
     useEffect(() => {
         if (user.email.length > 0 && user.password.length > 0) {
@@ -46,7 +48,8 @@ const LoginPage: React.FC = () => {
                 }
             });
             console.log("Login success", response.data);
-            router.push("/profile");
+            await fetchUser(true);
+            router.push("/dashboard");
         } catch (error: any) {
             console.log("Login failed", error.message);
             alert(error.message);

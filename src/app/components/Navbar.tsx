@@ -1,29 +1,22 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
-import axios from 'axios';
 import Avatar from './avatar/Avatar';
 import { FiHome, FiPieChart, FiUser } from 'react-icons/fi';
+import { useUserStore } from '@/store';
 
 const Navbar = () => {
   const pathname = usePathname();
-  const [username, setUsername] = useState<string>('');
+  const user = useUserStore((state) => state.user);
+  const fetchUser = useUserStore((state) => state.fetchUser);
 
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await axios.get('/api/users/me');
-        if (res.data?.data?.username) {
-          setUsername(res.data.data.username);
-        }
-      } catch (e) {
-        // silent fallback
-      }
-    };
     fetchUser();
-  }, []);
+  }, [fetchUser]);
+
+  const username = user?.username || '';
 
   const navItems = [
     { name: 'Dashboard', href: '/dashboard', icon: FiHome },
